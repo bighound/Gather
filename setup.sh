@@ -12,4 +12,4 @@ cd ..
 git clone https://github.com/FortyNorthSecurity/EyeWitness.git
 ./EyeWitness/Python/setup/setup.sh
 sleep 1
-echo '\nEnjoy hacking!!'
+echo 'Enjoy hacking!!'
