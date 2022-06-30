@@ -65,9 +65,8 @@ def listDomains(dom):
     os.system("gobuster dns -w {} -d {} -q -z -o ./{}/outputs/gobuster/res.txt".format(dict, dom, dom))
     os.system("cat ./{}/outputs/gobuster/res.txt | tr -d ' ' | cut -d ':' -f2 > ./{}/outputs/gobuster/results.txt".format(dom, dom))
     os.system("rm ./{}/outputs/gobuster/res.txt".format(dom))
-    os.system("mkdir -p ./{}/outputs/massdns/".format(dom))
     os.system("./massdns/bin/massdns -r ./massdns/lists/resolvers.txt -o S -w ./{}/outputs/massdns/resolved.txt ./{}/outputs/gobuster/results.txt".format(dom, dom))
-    os.system("./EyeWitness/Python/EyeWitness.py -f ./{}/outputs/massdns/resolved.txt --web".format(dom))
+    os.system("./EyeWitness/Python/EyeWitness.py -f ./{}/outputs/gobuster/results.txt --web".format(dom))
 
 
 
