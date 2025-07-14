@@ -217,3 +217,74 @@ def main():
 
 main()
 ```
+
+
+$ldapPath = "LDAP://servidorLDAP:389/DC=midominio,DC=local"  # Ajusta el DN base según tu servidor
+$entry = New-Object System.DirectoryServices.DirectoryEntry($ldapPath)
+$searcher = New-Object System.DirectoryServices.DirectorySearcher($entry)
+
+$searcher.Filter = "(objectClass=*)"  # Puedes ajustar el filtro (por ejemplo: "(uid=juan)")
+$searcher.PageSize = 1000  # Evita limitación de resultados
+
+$results = $searcher.FindAll()
+
+foreach ($result in $results) {
+    $dn = $result.Properties["distinguishedname"]
+    $cn = $result.Properties["cn"]
+    Write-Output "$cn — $dn"
+}
+
+foreach ($result in $results) {
+    foreach ($prop in $result.Properties.PropertyNames) {
+        "$prop: $($result.Properties[$prop])"
+    }
+    ""
+}
+
+
+$server = "ldap://servidorLDAP:389"
+$baseDN = "dc=midominio,dc=local"
+$filter = "(objectClass=*)"
+
+$connection = New-Object System.DirectoryServices.Protocols.LdapConnection($server)
+$connection.AuthType = [System.DirectoryServices.Protocols.AuthType]::Anonymous
+$connection.Bind()
+
+$request = New-Object System.DirectoryServices.Protocols.SearchRequest($baseDN, $filter, "Subtree", $null)
+$response = $connection.SendRequest($request)
+
+foreach ($entry in $response.Entries) {
+    Write-Output $entry.DistinguishedName
+}
+
+$server = "aplic_server.dipusevilla.es"
+$connection = New-Object System.DirectoryServices.Protocols.LdapConnection($server)
+$connection.AuthType = [System.DirectoryServices.Protocols.AuthType]::Anonymous
+
+try {
+    $connection.Bind()
+    Write-Host "✅ Bind anónimo exitoso"
+} catch {
+    Write-Host "❌ No se pudo hacer bind anónimo"
+}
+
+$baseDN = "dc=dipusevilla,dc=es"  # Ajusta con lo que te devuelva el paso anterior
+$searcher = New-Object System.DirectoryServices.DirectorySearcher
+$searcher.SearchRoot = New-Object System.DirectoryServices.DirectoryEntry("LDAP://$server/$baseDN")
+$searcher.Filter = "(objectClass=*)"
+$searcher.PageSize = 1000
+$results = $searcher.FindAll()
+
+foreach ($r in $results) {
+    $dn = $r.Properties["dn"]
+    $cn = $r.Properties["cn"]
+    "$cn — $dn"
+}
+
+
+$rootDse = New-Object System.DirectoryServices.DirectoryEntry("LDAP://$server/RootDSE")
+$defaultNamingContext = $rootDse.Properties["defaultNamingContext"]
+$namingContexts = $rootDse.Properties["namingContexts"]
+
+$namingContexts
+
