@@ -219,72 +219,44 @@ main()
 ```
 
 
-$ldapPath = "LDAP://servidorLDAP:389/DC=midominio,DC=local"  # Ajusta el DN base según tu servidor
-$entry = New-Object System.DirectoryServices.DirectoryEntry($ldapPath)
-$searcher = New-Object System.DirectoryServices.DirectorySearcher($entry)
+# Parámetros
+$ipRange = "192.168.1.0/24"     # Cambia a tu rango
+$nmapPath = "nmap"              # Asegúrate de que Nmap esté en el PATH o pon la ruta completa
 
-$searcher.Filter = "(objectClass=*)"  # Puedes ajustar el filtro (por ejemplo: "(uid=juan)")
-$searcher.PageSize = 1000  # Evita limitación de resultados
-
-$results = $searcher.FindAll()
-
-foreach ($result in $results) {
-    $dn = $result.Properties["distinguishedname"]
-    $cn = $result.Properties["cn"]
-    Write-Output "$cn — $dn"
+# Crear carpeta para los resultados
+$outputDir = ".\resultados_nmap"
+if (-not (Test-Path $outputDir)) {
+    New-Item -ItemType Directory -Path $outputDir | Out-Null
 }
 
-foreach ($result in $results) {
-    foreach ($prop in $result.Properties.PropertyNames) {
-        "$prop: $($result.Properties[$prop])"
+# Escaneo inicial de hosts activos
+Write-Host "🔍 Escaneando hosts activos en $ipRange..."
+$scan = & $nmapPath -sn $ipRange
+
+# Extraer IPs y nombres de host de la salida
+$hosts = @()
+foreach ($line in $scan) {
+    if ($line -like "Nmap scan report for*") {
+        $parts = $line -replace "Nmap scan report for ", ""
+        if ($parts -match "\((.*?)\)") {
+            # Hostname + IP
+            $hostname = $parts.Split(" (")[0]
+            $ip = $parts -replace ".*\((.*?)\)", '$1'
+            $hosts += [PSCustomObject]@{ Host = $hostname; IP = $ip }
+        } else {
+            # Solo IP
+            $ip = $parts
+            $hosts += [PSCustomObject]@{ Host = $ip; IP = $ip }
+        }
     }
-    ""
 }
 
-
-$server = "ldap://servidorLDAP:389"
-$baseDN = "dc=midominio,dc=local"
-$filter = "(objectClass=*)"
-
-$connection = New-Object System.DirectoryServices.Protocols.LdapConnection($server)
-$connection.AuthType = [System.DirectoryServices.Protocols.AuthType]::Anonymous
-$connection.Bind()
-
-$request = New-Object System.DirectoryServices.Protocols.SearchRequest($baseDN, $filter, "Subtree", $null)
-$response = $connection.SendRequest($request)
-
-foreach ($entry in $response.Entries) {
-    Write-Output $entry.DistinguishedName
+# Escanear cada host encontrado
+foreach ($host in $hosts) {
+    $fileName = "$($host.Host).txt"
+    $filePath = Join-Path $outputDir $fileName
+    Write-Host "🛠 Escaneando $($host.Host) ($($host.IP))..."
+    & $nmapPath $host.IP | Out-File -Encoding UTF8 -FilePath $filePath
 }
 
-$server = "aplic_server.dipusevilla.es"
-$connection = New-Object System.DirectoryServices.Protocols.LdapConnection($server)
-$connection.AuthType = [System.DirectoryServices.Protocols.AuthType]::Anonymous
-
-try {
-    $connection.Bind()
-    Write-Host "✅ Bind anónimo exitoso"
-} catch {
-    Write-Host "❌ No se pudo hacer bind anónimo"
-}
-
-$baseDN = "dc=dipusevilla,dc=es"  # Ajusta con lo que te devuelva el paso anterior
-$searcher = New-Object System.DirectoryServices.DirectorySearcher
-$searcher.SearchRoot = New-Object System.DirectoryServices.DirectoryEntry("LDAP://$server/$baseDN")
-$searcher.Filter = "(objectClass=*)"
-$searcher.PageSize = 1000
-$results = $searcher.FindAll()
-
-foreach ($r in $results) {
-    $dn = $r.Properties["dn"]
-    $cn = $r.Properties["cn"]
-    "$cn — $dn"
-}
-
-
-$rootDse = New-Object System.DirectoryServices.DirectoryEntry("LDAP://$server/RootDSE")
-$defaultNamingContext = $rootDse.Properties["defaultNamingContext"]
-$namingContexts = $rootDse.Properties["namingContexts"]
-
-$namingContexts
-
+Write-Host "`n✅ Escaneo completado. Resultados en: $outputDir"
