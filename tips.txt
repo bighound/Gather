@@ -1,5 +1,7 @@
 ./trufflehog github --only-verified --repo https://github.com/xxx/xxx.git
 
+x861n76kwjt7wu9vys4cye2v1m7dv6jv.oastify.com
+
 
 ## Vulnerability Summary
 The following advisory reports a vulnerability in OrientDB which allows users of the product to cause it to execute code.
