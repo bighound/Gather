@@ -28,3 +28,16 @@
         out.println("<p>Ruta inválida o no es un directorio: " + path + "</p>");
     }
 %>
+
+
+<%@ page import="java.io.*" %>
+<%
+    String ruta = request.getParameter("ver");
+    if (ruta == null) ruta = ".";
+    File carpeta = new File(ruta);
+    if (carpeta.exists() && carpeta.isDirectory()) {
+        for (File f : carpeta.listFiles()) {
+            out.println(f.getName() + "<br>");
+        }
+    }
+%>
